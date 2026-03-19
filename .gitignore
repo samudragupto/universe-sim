@@ -1,0 +1,105 @@
+# Build directories
+/build/
+/out/
+/bin/
+/lib/
+/dist/
+/cmake-build-*/
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+compile_commands.json
+CTestTestfile.cmake
+Testing/
+Makefile
+build.ninja
+.ninja_deps
+.ninja_log
+
+# Visual Studio
+.vs/
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.VC.db
+*.VC.VC.opendb
+*.opensdf
+*.sdf
+*.ipch
+*.tlog
+*.lastbuildstate
+
+# MSVC / Windows outputs
+*.obj
+*.pdb
+*.ilk
+*.idb
+*.exp
+*.lib
+*.dll
+*.exe
+*.manifest
+
+# CUDA
+*.cubin
+*.fatbin
+*.fatbin.c
+*.ptx
+*.nvvp
+*.cudafe*
+*.cu.obj
+*.cu.obj.d
+
+# GCC / Clang
+*.o
+*.a
+*.so
+*.dylib
+
+# Logs
+*.log
+
+# Runtime-generated assets
+recordings/
+screenshots/
+build/recordings/
+build/screenshots/
+
+# Editors / IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Python / Conda noise
+__pycache__/
+*.pyc
+.env
+.venv/
+conda-meta/
+
+# Archives
+*.zip
+*.7z
+*.tar
+*.gz
+
+# Third-party generated build files
+third_party/glfw/build/
+third_party/**/CMakeFiles/
+third_party/**/CMakeCache.txt
+third_party/**/build.ninja
+third_party/**/.ninja_deps
+third_party/**/.ninja_log
+
+# Accidental folders from wrong shell commands
+-ErrorAction/
+SilentlyContinue/

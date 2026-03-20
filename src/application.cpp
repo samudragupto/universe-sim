@@ -23,35 +23,35 @@ Application::~Application() {
 
 void Application::loadConfig() {
     m_cfg = {
-        50000,
-        0.5f,
-        0.5f,
-        0.005f,
-        1.35f,
-        0.1f,
-        false,
-        false,
-        true,
-        true,
-        false,
-        64,
-        1280,
-        720,
+        150000,         // particleCount
+        0.5f,           // G
+        0.5f,           // softening
+        0.005f,         // timestep
+        1.10f,          // theta
+        0.1f,           // mergeDistance
+        false,          // bruteForce
+        false,          // evolution
+        false,          // adaptiveTimestep
+        false,          // adaptiveTheta
+        false,          // volumetricEnabled
+        64,             // densityFieldRes
+        2560,           // winW
+        1440,           // winH
         "galaxy_collision",
-        false,
-        1.4f,
-        0.04f,
-        1.0f,
-        false,
-        16,
-        5000,
-        0.0f,
-        0.0f,
-        25.0f,
-        0.1f,
-        60.0f,
-        0.01f,
-        50000.0f
+        true,           // bloom
+        1.1f,           // bloomThresh
+        0.10f,          // bloomIntensity
+        1.1f,           // exposure
+        true,           // trails
+        16,             // trailLen
+        15000,          // maxTrailP
+        0.08f,          // vignette
+        0.0002f,        // chromatic
+        25.0f,          // camSpeed
+        0.1f,           // camSens
+        60.0f,          // camFOV
+        0.01f,          // nearP
+        50000.0f        // farP
     };
 
     std::ifstream file("config/simulation.json");
@@ -94,8 +94,7 @@ void Application::loadConfig() {
     }
 
     m_cfg.bruteForce = false;
-    if (m_cfg.particleCount > 50000) m_cfg.particleCount = 50000;
-    if (m_cfg.theta < 1.2f) m_cfg.theta = 1.35f;
+    if (m_cfg.particleCount < 100000) m_cfg.particleCount = 100000;
 }
 
 bool Application::initWindow() {
@@ -166,10 +165,10 @@ void Application::resetSimulation(Scenario sc) {
     sc2.mergeDistance = m_cfg.mergeDistance;
     sc2.bruteForce = false;
     sc2.evolution = m_cfg.evolution;
-    sc2.adaptiveTimestep = m_cfg.adaptiveTimestep;
-    sc2.adaptiveTheta = m_cfg.adaptiveTheta;
-    sc2.skipTreeRebuild = true;
-    sc2.treeRebuildInterval = 4;
+    sc2.adaptiveTimestep = false;
+    sc2.adaptiveTheta = false;
+    sc2.skipTreeRebuild = false;      // rebuild every frame
+    sc2.treeRebuildInterval = 1;
 
     m_sim.init(sc2, m_cfg.particleCount);
     m_sim.setParticles(&m_particles);
@@ -209,15 +208,15 @@ bool Application::init() {
     sc2.mergeDistance = m_cfg.mergeDistance;
     sc2.bruteForce = false;
     sc2.evolution = m_cfg.evolution;
-    sc2.adaptiveTimestep = m_cfg.adaptiveTimestep;
-    sc2.adaptiveTheta = m_cfg.adaptiveTheta;
-    sc2.skipTreeRebuild = true;
-    sc2.treeRebuildInterval = 4;
+    sc2.adaptiveTimestep = false;
+    sc2.adaptiveTheta = false;
+    sc2.skipTreeRebuild = false;      // rebuild every frame
+    sc2.treeRebuildInterval = 1;
 
     m_sim.init(sc2, m_cfg.particleCount);
     m_sim.setParticles(&m_particles);
 
-    m_camera.setPosition(glm::vec3(0.0f, 0.0f, 120.0f));
+    m_camera.setPosition(glm::vec3(0.0f, 0.0f, 180.0f));
     m_camera.setTarget(glm::vec3(0.0f, 0.0f, 0.0f));
     m_camera.setFOV(m_cfg.camFOV);
     m_camera.setAspectRatio((float)m_cfg.winW / (float)m_cfg.winH);
@@ -309,11 +308,11 @@ void Application::mainLoop() {
         m_camera.update(m_dt);
         m_sim.step();
 
-        if ((m_sim.getStep() % 2) == 0) {
-            m_renderer.updateRenderBuffer(m_particles);
-        }
+        // max GPU load: update every frame
+        m_renderer.updateRenderBuffer(m_particles);
 
-        if (m_renderer.config().trailsEnabled && (m_sim.getStep() % 4) == 0) {
+        // max GPU load: trails every frame if enabled
+        if (m_renderer.config().trailsEnabled) {
             m_renderer.updateTrails(m_particles);
         }
 

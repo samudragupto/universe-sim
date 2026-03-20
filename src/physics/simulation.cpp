@@ -4,6 +4,8 @@
 #include "cuda/physics.cuh"
 #include "cuda/stellar_evolution.cuh"
 #include <algorithm>
+#include <cstring>
+#include <cmath>
 
 Simulation::Simulation()
     : m_ps(nullptr),
@@ -18,17 +20,17 @@ Simulation::Simulation()
       m_intMs(0.0f),
       m_totalMs(0.0f) {
     m_cfg = {
-        1.0f,
-        0.1f,
+        0.5f,
+        0.5f,
         0.005f,
-        1.15f,
+        1.35f,
         0.1f,
         false,
         false,
         true,
         true,
         true,
-        2
+        4
     };
     memset(&m_diag, 0, sizeof(m_diag));
 }
@@ -143,7 +145,8 @@ void Simulation::step() {
         launchStellarEvolution(d, m_cfg.timestep, n, m_physicsStream);
     }
 
-    if ((m_step % 20) == 0) {
+    // Much less frequent diagnostics to avoid sync overhead
+    if ((m_step % 120) == 0) {
         launchComputeDiagnostics(d, &m_diag, m_cfg.G, n, m_auxStream);
     }
 
@@ -156,16 +159,17 @@ void Simulation::step() {
     CUDA_CHECK(cudaEventElapsedTime(&m_intMs, m_ev[2], m_ev[3]));
     CUDA_CHECK(cudaEventElapsedTime(&m_totalMs, m_ev[0], m_ev[4]));
 
+    // Adaptive theta aggressively chases performance on laptop GPU
     if (m_cfg.adaptiveTheta) {
-        if (m_totalMs > 16.0f) m_cfg.theta += 0.02f;
-        else if (m_totalMs < 10.0f) m_cfg.theta -= 0.01f;
-        m_cfg.theta = std::clamp(m_cfg.theta, 0.8f, 1.5f);
+        if (m_totalMs > 16.0f) m_cfg.theta += 0.03f;
+        else if (m_totalMs < 8.0f) m_cfg.theta -= 0.01f;
+        m_cfg.theta = std::clamp(m_cfg.theta, 1.0f, 1.7f);
     }
 
     if (m_cfg.adaptiveTimestep && m_diag.maxAcceleration > 0.0f) {
         float targetDt = 0.06f * sqrtf(m_cfg.softening / m_diag.maxAcceleration);
-        m_cfg.timestep = m_cfg.timestep * 0.9f + targetDt * 0.1f;
-        m_cfg.timestep = std::clamp(m_cfg.timestep, 0.0005f, 0.02f);
+        m_cfg.timestep = m_cfg.timestep * 0.92f + targetDt * 0.08f;
+        m_cfg.timestep = std::clamp(m_cfg.timestep, 0.001f, 0.02f);
     }
 
     m_time += m_cfg.timestep;

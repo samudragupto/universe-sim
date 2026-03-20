@@ -89,16 +89,16 @@ __global__ void barnesHutKernel(
         float dx = cx - xi;
         float dy = cy - yi;
         float dz = cz - zi;
-
         float d2 = dx * dx + dy * dy + dz * dz + eps2;
 
-        bool leafLike = tree.is_leaf[ni] || tree.particle_count[ni] <= 32;
+        bool leafLike = tree.is_leaf[ni] || tree.particle_count[ni] <= 64;
 
         if (leafLike) {
             if (tree.particle_count[ni] == 1) {
                 uint32_t pidx = sortedIndices[tree.particle_start[ni]];
                 if (pidx == i) continue;
             }
+
             float inv = rsqrtf(d2);
             float f = G * nodeMass * inv * inv * inv;
             fx += f * dx;
@@ -180,10 +180,8 @@ void launchIntegrate(ParticleDeviceData& d, float dt, uint32_t n, cudaStream_t s
         d.pos_x, d.pos_y, d.pos_z,
         d.vel_x, d.vel_y, d.vel_z,
         d.acc_x, d.acc_y, d.acc_z,
-        d.alive,
-        d.age,
-        dt,
-        n
+        d.alive, d.age,
+        dt, n
     );
     CUDA_CHECK(cudaGetLastError());
 }

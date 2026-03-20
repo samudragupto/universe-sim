@@ -27,7 +27,6 @@ public:
     void init(const SimulationConfig& cfg, uint32_t count);
     void cleanup();
     void setParticles(ParticleSystem* ps);
-
     void step();
 
     void pause() { m_paused = true; }

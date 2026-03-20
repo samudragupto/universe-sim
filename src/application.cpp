@@ -23,11 +23,11 @@ Application::~Application() {
 
 void Application::loadConfig() {
     m_cfg = {
-        15000,
+        50000,
         0.5f,
         0.5f,
         0.005f,
-        1.15f,
+        1.35f,
         0.1f,
         false,
         false,
@@ -35,18 +35,18 @@ void Application::loadConfig() {
         true,
         false,
         64,
-        1600,
-        900,
+        1280,
+        720,
         "galaxy_collision",
-        true,
-        0.8f,
-        0.35f,
-        1.15f,
+        false,
+        1.4f,
+        0.04f,
+        1.0f,
         false,
         16,
         5000,
-        0.2f,
-        0.001f,
+        0.0f,
+        0.0f,
         25.0f,
         0.1f,
         60.0f,
@@ -94,8 +94,8 @@ void Application::loadConfig() {
     }
 
     m_cfg.bruteForce = false;
-    if (m_cfg.particleCount > 15000) m_cfg.particleCount = 15000;
-    if (m_cfg.theta < 0.9f) m_cfg.theta = 1.15f;
+    if (m_cfg.particleCount > 50000) m_cfg.particleCount = 50000;
+    if (m_cfg.theta < 1.2f) m_cfg.theta = 1.35f;
 }
 
 bool Application::initWindow() {
@@ -169,7 +169,7 @@ void Application::resetSimulation(Scenario sc) {
     sc2.adaptiveTimestep = m_cfg.adaptiveTimestep;
     sc2.adaptiveTheta = m_cfg.adaptiveTheta;
     sc2.skipTreeRebuild = true;
-    sc2.treeRebuildInterval = 2;
+    sc2.treeRebuildInterval = 4;
 
     m_sim.init(sc2, m_cfg.particleCount);
     m_sim.setParticles(&m_particles);
@@ -212,12 +212,11 @@ bool Application::init() {
     sc2.adaptiveTimestep = m_cfg.adaptiveTimestep;
     sc2.adaptiveTheta = m_cfg.adaptiveTheta;
     sc2.skipTreeRebuild = true;
-    sc2.treeRebuildInterval = 2;
+    sc2.treeRebuildInterval = 4;
 
     m_sim.init(sc2, m_cfg.particleCount);
     m_sim.setParticles(&m_particles);
 
-    // Better startup framing
     m_camera.setPosition(glm::vec3(0.0f, 0.0f, 120.0f));
     m_camera.setTarget(glm::vec3(0.0f, 0.0f, 0.0f));
     m_camera.setFOV(m_cfg.camFOV);
@@ -260,25 +259,6 @@ void Application::mainLoop() {
             else m_sim.pause();
         }
 
-        if (m_input.isBloomToggled()) {
-            m_cfg.bloom = !m_cfg.bloom;
-            m_renderer.config().bloomEnabled = m_cfg.bloom;
-        }
-
-        if (m_input.isTrailsToggled()) {
-            m_cfg.trails = !m_cfg.trails;
-            m_renderer.config().trailsEnabled = m_cfg.trails;
-        }
-
-        if (m_input.isEvolutionToggled()) {
-            m_cfg.evolution = !m_cfg.evolution;
-            m_sim.config().evolution = m_cfg.evolution;
-        }
-
-        if (m_input.isOverlayToggled()) {
-            m_renderer.setOverlayVisible(!m_renderer.isOverlayVisible());
-        }
-
         if (m_input.isModeToggled()) {
             auto m = m_camera.getMode();
             if (m == CameraMode::FREE) m_camera.setMode(CameraMode::ORBIT);
@@ -296,6 +276,25 @@ void Application::mainLoop() {
             m_renderer.toggleRecording("recordings");
         }
 
+        if (m_input.isOverlayToggled()) {
+            m_renderer.setOverlayVisible(!m_renderer.isOverlayVisible());
+        }
+
+        if (m_input.isBloomToggled()) {
+            m_cfg.bloom = !m_cfg.bloom;
+            m_renderer.config().bloomEnabled = m_cfg.bloom;
+        }
+
+        if (m_input.isTrailsToggled()) {
+            m_cfg.trails = !m_cfg.trails;
+            m_renderer.config().trailsEnabled = m_cfg.trails;
+        }
+
+        if (m_input.isEvolutionToggled()) {
+            m_cfg.evolution = !m_cfg.evolution;
+            m_sim.config().evolution = m_cfg.evolution;
+        }
+
         int ss = m_input.getScenarioSwitch();
         if (ss >= 0 && ss <= 3) {
             Scenario scenarios[] = {
@@ -310,9 +309,11 @@ void Application::mainLoop() {
         m_camera.update(m_dt);
         m_sim.step();
 
-        m_renderer.updateRenderBuffer(m_particles);
+        if ((m_sim.getStep() % 2) == 0) {
+            m_renderer.updateRenderBuffer(m_particles);
+        }
 
-        if (m_renderer.config().trailsEnabled) {
+        if (m_renderer.config().trailsEnabled && (m_sim.getStep() % 4) == 0) {
             m_renderer.updateTrails(m_particles);
         }
 

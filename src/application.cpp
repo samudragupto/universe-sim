@@ -129,7 +129,6 @@ bool Application::initCUDA() {
     cudaDeviceProp p;
     CUDA_CHECK(cudaGetDeviceProperties(&p, 0));
     printf("CUDA: %s (SM %d.%d, %zuMB)\n", p.name, p.major, p.minor, p.totalGlobalMem / (1024 * 1024));
-
     CUDA_CHECK(cudaSetDevice(0));
     return true;
 }
@@ -218,8 +217,9 @@ bool Application::init() {
     m_sim.init(sc2, m_cfg.particleCount);
     m_sim.setParticles(&m_particles);
 
-    m_camera.setPosition(glm::vec3(0.0f, 0.0f, 60.0f));
-    m_camera.setTarget(glm::vec3(0.0f));
+    // Better startup framing
+    m_camera.setPosition(glm::vec3(0.0f, 0.0f, 120.0f));
+    m_camera.setTarget(glm::vec3(0.0f, 0.0f, 0.0f));
     m_camera.setFOV(m_cfg.camFOV);
     m_camera.setAspectRatio((float)m_cfg.winW / (float)m_cfg.winH);
     m_camera.setNearFar(m_cfg.nearP, m_cfg.farP);

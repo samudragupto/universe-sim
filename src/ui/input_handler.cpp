@@ -1,68 +1,180 @@
 #include "input_handler.h"
 
-float InputHandler::s_lx=960, InputHandler::s_ly=540;
-float InputHandler::s_xo=0, InputHandler::s_yo=0, InputHandler::s_so=0;
-bool InputHandler::s_first=true, InputHandler::s_pause=false, InputHandler::s_mode=false, InputHandler::s_rmb=false;
-bool InputHandler::s_shot=false, InputHandler::s_rec=false, InputHandler::s_overlay=false;
-bool InputHandler::s_trails=false, InputHandler::s_bloom=false, InputHandler::s_evol=false, InputHandler::s_vol=false;
-int InputHandler::s_scen=-1;
+float InputHandler::s_lastX = 960.0f;
+float InputHandler::s_lastY = 540.0f;
+float InputHandler::s_xOffset = 0.0f;
+float InputHandler::s_yOffset = 0.0f;
+float InputHandler::s_scrollOffset = 0.0f;
 
-InputHandler::InputHandler() : m_close(false) {}
+bool InputHandler::s_firstMouse = true;
+bool InputHandler::s_pausePressed = false;
+bool InputHandler::s_modePressed = false;
+bool InputHandler::s_rightMouseDown = false;
 
-void InputHandler::init(GLFWwindow* w) {
-    glfwSetCursorPosCallback(w, mouseCallback);
-    glfwSetScrollCallback(w, scrollCallback);
-    glfwSetKeyCallback(w, keyCallback);
+bool InputHandler::s_screenshotPressed = false;
+bool InputHandler::s_recordPressed = false;
+bool InputHandler::s_overlayPressed = false;
+bool InputHandler::s_trailsPressed = false;
+bool InputHandler::s_bloomPressed = false;
+bool InputHandler::s_evolutionPressed = false;
+bool InputHandler::s_volumetricPressed = false;
+
+int InputHandler::s_scenarioSwitch = -1;
+
+InputHandler::InputHandler() : m_shouldClose(false) {}
+
+void InputHandler::init(GLFWwindow* window) {
+    glfwSetCursorPosCallback(window, mouseCallback);
+    glfwSetScrollCallback(window, scrollCallback);
+    glfwSetKeyCallback(window, keyCallback);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 }
 
-void InputHandler::processInput(GLFWwindow* w, Camera& cam, float dt) {
-    if (glfwGetKey(w, GLFW_KEY_ESCAPE)==GLFW_PRESS) m_close=true;
-    if (glfwGetKey(w, GLFW_KEY_W)==GLFW_PRESS) cam.processKeyboard(0, dt);
-    if (glfwGetKey(w, GLFW_KEY_S)==GLFW_PRESS) cam.processKeyboard(1, dt);
-    if (glfwGetKey(w, GLFW_KEY_A)==GLFW_PRESS) cam.processKeyboard(2, dt);
-    if (glfwGetKey(w, GLFW_KEY_D)==GLFW_PRESS) cam.processKeyboard(3, dt);
-    if (glfwGetKey(w, GLFW_KEY_Q)==GLFW_PRESS) cam.processKeyboard(4, dt);
-    if (glfwGetKey(w, GLFW_KEY_E)==GLFW_PRESS) cam.processKeyboard(5, dt);
-    s_rmb = glfwGetMouseButton(w, GLFW_MOUSE_BUTTON_RIGHT)==GLFW_PRESS;
-    if (s_rmb) cam.processMouseMovement(s_xo, s_yo);
-    s_xo=s_yo=0;
-    if (s_so!=0) { cam.processMouseScroll(s_so); s_so=0; }
+void InputHandler::processInput(GLFWwindow* window, Camera& camera, float deltaTime) {
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+        m_shouldClose = true;
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) camera.processKeyboard(0, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) camera.processKeyboard(1, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) camera.processKeyboard(2, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) camera.processKeyboard(3, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) camera.processKeyboard(4, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) camera.processKeyboard(5, deltaTime);
+
+    s_rightMouseDown = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS;
+
+    if (s_rightMouseDown) {
+        camera.processMouseMovement(s_xOffset, s_yOffset);
+    }
+
+    s_xOffset = 0.0f;
+    s_yOffset = 0.0f;
+
+    if (s_scrollOffset != 0.0f) {
+        camera.processMouseScroll(s_scrollOffset);
+        s_scrollOffset = 0.0f;
+    }
 }
 
-bool InputHandler::isPauseToggled() { if(s_pause){s_pause=false;return true;}return false; }
-bool InputHandler::isModeToggled() { if(s_mode){s_mode=false;return true;}return false; }
-bool InputHandler::isScreenshotRequested() { if(s_shot){s_shot=false;return true;}return false; }
-bool InputHandler::isRecordToggled() { if(s_rec){s_rec=false;return true;}return false; }
-bool InputHandler::isOverlayToggled() { if(s_overlay){s_overlay=false;return true;}return false; }
-bool InputHandler::isTrailsToggled() { if(s_trails){s_trails=false;return true;}return false; }
-bool InputHandler::isBloomToggled() { if(s_bloom){s_bloom=false;return true;}return false; }
-bool InputHandler::isEvolutionToggled() { if(s_evol){s_evol=false;return true;}return false; }
-bool InputHandler::isVolumetricToggled() { if(s_vol){s_vol=false;return true;}return false; }
-int InputHandler::getScenarioSwitch() { int v=s_scen; s_scen=-1; return v; }
-
-void InputHandler::mouseCallback(GLFWwindow*, double x, double y) {
-    float xp=(float)x, yp=(float)y;
-    if(s_first){s_lx=xp;s_ly=yp;s_first=false;}
-    s_xo=xp-s_lx; s_yo=s_ly-yp; s_lx=xp; s_ly=yp;
+bool InputHandler::isPauseToggled() {
+    if (s_pausePressed) {
+        s_pausePressed = false;
+        return true;
+    }
+    return false;
 }
 
-void InputHandler::scrollCallback(GLFWwindow*, double, double y) { s_so=(float)y; }
+bool InputHandler::isModeToggled() {
+    if (s_modePressed) {
+        s_modePressed = false;
+        return true;
+    }
+    return false;
+}
 
-void InputHandler::keyCallback(GLFWwindow*, int key, int, int act, int) {
-    if(act!=GLFW_PRESS)return;
-    switch(key) {
-        case GLFW_KEY_SPACE: s_pause=true; break;
-        case GLFW_KEY_TAB: s_mode=true; break;
-        case GLFW_KEY_F2: s_shot=true; break;
-        case GLFW_KEY_F3: s_rec=true; break;
-        case GLFW_KEY_F4: s_overlay=true; break;
-        case GLFW_KEY_T: s_trails=true; break;
-        case GLFW_KEY_B: s_bloom=true; break;
-        case GLFW_KEY_V: s_evol=true; break;
-        case GLFW_KEY_G: s_vol=true; break;
-        case GLFW_KEY_1: s_scen=0; break;
-        case GLFW_KEY_2: s_scen=1; break;
-        case GLFW_KEY_3: s_scen=2; break;
-        case GLFW_KEY_4: s_scen=3; break;
+bool InputHandler::isScreenshotRequested() {
+    if (s_screenshotPressed) {
+        s_screenshotPressed = false;
+        return true;
+    }
+    return false;
+}
+
+bool InputHandler::isRecordToggled() {
+    if (s_recordPressed) {
+        s_recordPressed = false;
+        return true;
+    }
+    return false;
+}
+
+bool InputHandler::isOverlayToggled() {
+    if (s_overlayPressed) {
+        s_overlayPressed = false;
+        return true;
+    }
+    return false;
+}
+
+bool InputHandler::isTrailsToggled() {
+    if (s_trailsPressed) {
+        s_trailsPressed = false;
+        return true;
+    }
+    return false;
+}
+
+bool InputHandler::isBloomToggled() {
+    if (s_bloomPressed) {
+        s_bloomPressed = false;
+        return true;
+    }
+    return false;
+}
+
+bool InputHandler::isEvolutionToggled() {
+    if (s_evolutionPressed) {
+        s_evolutionPressed = false;
+        return true;
+    }
+    return false;
+}
+
+bool InputHandler::isVolumetricToggled() {
+    if (s_volumetricPressed) {
+        s_volumetricPressed = false;
+        return true;
+    }
+    return false;
+}
+
+int InputHandler::getScenarioSwitch() {
+    int v = s_scenarioSwitch;
+    s_scenarioSwitch = -1;
+    return v;
+}
+
+void InputHandler::mouseCallback(GLFWwindow* window, double xpos, double ypos) {
+    float x = static_cast<float>(xpos);
+    float y = static_cast<float>(ypos);
+
+    if (s_firstMouse) {
+        s_lastX = x;
+        s_lastY = y;
+        s_firstMouse = false;
+    }
+
+    s_xOffset = x - s_lastX;
+    s_yOffset = s_lastY - y;
+    s_lastX = x;
+    s_lastY = y;
+}
+
+void InputHandler::scrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
+    s_scrollOffset = static_cast<float>(yoffset);
+}
+
+void InputHandler::keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+    if (action != GLFW_PRESS) return;
+
+    switch (key) {
+        case GLFW_KEY_SPACE: s_pausePressed = true; break;
+        case GLFW_KEY_TAB: s_modePressed = true; break;
+        case GLFW_KEY_F2: s_screenshotPressed = true; break;
+        case GLFW_KEY_F3: s_recordPressed = true; break;
+        case GLFW_KEY_F4: s_overlayPressed = true; break;
+
+        case GLFW_KEY_B: s_bloomPressed = true; break;
+        case GLFW_KEY_T: s_trailsPressed = true; break;
+        case GLFW_KEY_V: s_evolutionPressed = true; break;
+        case GLFW_KEY_G: s_volumetricPressed = true; break;
+
+        case GLFW_KEY_1: s_scenarioSwitch = 0; break;
+        case GLFW_KEY_2: s_scenarioSwitch = 1; break;
+        case GLFW_KEY_3: s_scenarioSwitch = 2; break;
+        case GLFW_KEY_4: s_scenarioSwitch = 3; break;
+
+        default: break;
     }
 }

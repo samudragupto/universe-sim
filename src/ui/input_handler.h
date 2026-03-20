@@ -6,9 +6,12 @@
 class InputHandler {
 public:
     InputHandler();
-    void init(GLFWwindow* w);
-    void processInput(GLFWwindow* w, Camera& cam, float dt);
-    bool shouldClose() const { return m_close; }
+
+    void init(GLFWwindow* window);
+    void processInput(GLFWwindow* window, Camera& camera, float deltaTime);
+
+    bool shouldClose() const { return m_shouldClose; }
+
     bool isPauseToggled();
     bool isModeToggled();
     bool isScreenshotRequested();
@@ -20,14 +23,31 @@ public:
     bool isVolumetricToggled();
     int getScenarioSwitch();
 
-    static void mouseCallback(GLFWwindow* w, double x, double y);
-    static void scrollCallback(GLFWwindow* w, double x, double y);
-    static void keyCallback(GLFWwindow* w, int key, int sc, int act, int mods);
+    static void mouseCallback(GLFWwindow* window, double xpos, double ypos);
+    static void scrollCallback(GLFWwindow* window, double xoffset, double yoffset);
+    static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 
-    static float s_lx, s_ly, s_xo, s_yo, s_so;
-    static bool s_first, s_pause, s_mode, s_rmb;
-    static bool s_shot, s_rec, s_overlay, s_trails, s_bloom, s_evol, s_vol;
-    static int s_scen;
+    static float s_lastX;
+    static float s_lastY;
+    static float s_xOffset;
+    static float s_yOffset;
+    static float s_scrollOffset;
+
+    static bool s_firstMouse;
+    static bool s_pausePressed;
+    static bool s_modePressed;
+    static bool s_rightMouseDown;
+
+    static bool s_screenshotPressed;
+    static bool s_recordPressed;
+    static bool s_overlayPressed;
+    static bool s_trailsPressed;
+    static bool s_bloomPressed;
+    static bool s_evolutionPressed;
+    static bool s_volumetricPressed;
+
+    static int s_scenarioSwitch;
+
 private:
-    bool m_close;
+    bool m_shouldClose;
 };

@@ -294,6 +294,10 @@ void Application::mainLoop() {
             m_sim.config().evolution = m_cfg.evolution;
         }
 
+        if (m_input.isVolumetricToggled()) {
+            m_cfg.volumetricEnabled = !m_cfg.volumetricEnabled;
+        }
+
         int ss = m_input.getScenarioSwitch();
         if (ss >= 0 && ss <= 3) {
             Scenario scenarios[] = {

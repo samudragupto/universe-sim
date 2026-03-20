@@ -28,16 +28,21 @@ class Application {
 public:
     Application();
     ~Application();
+
     bool init();
     void run();
     void shutdown();
+
 private:
     bool initWindow();
     bool initCUDA();
     void loadConfig();
     void mainLoop();
     void resetSimulation(Scenario sc);
+    void toggleFullscreen();
+
     static void fbCallback(GLFWwindow* w, int width, int height);
+
     GLFWwindow* m_window;
     AppConfig m_cfg;
     Renderer m_renderer;
@@ -45,8 +50,15 @@ private:
     Simulation m_sim;
     ParticleSystem m_particles;
     InputHandler m_input;
+
     float m_lastTime, m_dt;
     uint64_t m_frameCount;
     float m_fpsTimer, m_fps;
     bool m_initialized;
+
+    bool m_fullscreen;
+    int m_windowedX;
+    int m_windowedY;
+    int m_windowedW;
+    int m_windowedH;
 };

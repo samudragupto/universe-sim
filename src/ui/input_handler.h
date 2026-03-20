@@ -21,6 +21,7 @@ public:
     bool isBloomToggled();
     bool isEvolutionToggled();
     bool isVolumetricToggled();
+    bool isFullscreenToggled();
     int getScenarioSwitch();
 
     static void mouseCallback(GLFWwindow* window, double xpos, double ypos);
@@ -45,6 +46,7 @@ public:
     static bool s_bloomPressed;
     static bool s_evolutionPressed;
     static bool s_volumetricPressed;
+    static bool s_fullscreenPressed;
 
     static int s_scenarioSwitch;
 

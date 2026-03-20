@@ -5,6 +5,29 @@ A high-performance real-time universe / galaxy simulation built with **C++**, **
 This branch (``main``) is the **performance-oriented profile**, tuned to push GPU workload harder and explore larger particle counts on modern NVIDIA GPUs.
 
 ---
+## Demo Visuals
+
+The following clips show representative outputs from the simulation and rendering pipeline.
+
+### 1. Spiral Galaxy Structure
+A rotating particle field showing emergent galactic organization and disk-like morphology.
+
+![Spiral Galaxy Demo](media/spiral-galaxy.gif)
+
+### 2. Black Hole / Accretion Structure
+A dense central object with a visually distinct accretion-style region and surrounding particle flow.
+
+![Black Hole Demo](media/black-hole.gif)
+
+### 3. Galactic Core Expansion
+A dense stellar core with strong outward structure and radial particle motion.
+
+![Galactic Core Demo](media/galactic-core.gif)
+
+### 4. Compact Stellar Cloud
+A compact particle system showing localized structure formation and dense clustering.
+
+![Stellar Cloud Demo](media/stellar-cloud.gif)
 ## Architecture Diagram
 
 ```mermaid

@@ -18,6 +18,7 @@ bool InputHandler::s_trailsPressed = false;
 bool InputHandler::s_bloomPressed = false;
 bool InputHandler::s_evolutionPressed = false;
 bool InputHandler::s_volumetricPressed = false;
+bool InputHandler::s_fullscreenPressed = false;
 
 int InputHandler::s_scenarioSwitch = -1;
 
@@ -58,77 +59,45 @@ void InputHandler::processInput(GLFWwindow* window, Camera& camera, float deltaT
 }
 
 bool InputHandler::isPauseToggled() {
-    if (s_pausePressed) {
-        s_pausePressed = false;
-        return true;
-    }
+    if (s_pausePressed) { s_pausePressed = false; return true; }
     return false;
 }
-
 bool InputHandler::isModeToggled() {
-    if (s_modePressed) {
-        s_modePressed = false;
-        return true;
-    }
+    if (s_modePressed) { s_modePressed = false; return true; }
     return false;
 }
-
 bool InputHandler::isScreenshotRequested() {
-    if (s_screenshotPressed) {
-        s_screenshotPressed = false;
-        return true;
-    }
+    if (s_screenshotPressed) { s_screenshotPressed = false; return true; }
     return false;
 }
-
 bool InputHandler::isRecordToggled() {
-    if (s_recordPressed) {
-        s_recordPressed = false;
-        return true;
-    }
+    if (s_recordPressed) { s_recordPressed = false; return true; }
     return false;
 }
-
 bool InputHandler::isOverlayToggled() {
-    if (s_overlayPressed) {
-        s_overlayPressed = false;
-        return true;
-    }
+    if (s_overlayPressed) { s_overlayPressed = false; return true; }
     return false;
 }
-
 bool InputHandler::isTrailsToggled() {
-    if (s_trailsPressed) {
-        s_trailsPressed = false;
-        return true;
-    }
+    if (s_trailsPressed) { s_trailsPressed = false; return true; }
     return false;
 }
-
 bool InputHandler::isBloomToggled() {
-    if (s_bloomPressed) {
-        s_bloomPressed = false;
-        return true;
-    }
+    if (s_bloomPressed) { s_bloomPressed = false; return true; }
     return false;
 }
-
 bool InputHandler::isEvolutionToggled() {
-    if (s_evolutionPressed) {
-        s_evolutionPressed = false;
-        return true;
-    }
+    if (s_evolutionPressed) { s_evolutionPressed = false; return true; }
     return false;
 }
-
 bool InputHandler::isVolumetricToggled() {
-    if (s_volumetricPressed) {
-        s_volumetricPressed = false;
-        return true;
-    }
+    if (s_volumetricPressed) { s_volumetricPressed = false; return true; }
     return false;
 }
-
+bool InputHandler::isFullscreenToggled() {
+    if (s_fullscreenPressed) { s_fullscreenPressed = false; return true; }
+    return false;
+}
 int InputHandler::getScenarioSwitch() {
     int v = s_scenarioSwitch;
     s_scenarioSwitch = -1;
@@ -164,6 +133,7 @@ void InputHandler::keyCallback(GLFWwindow* window, int key, int scancode, int ac
         case GLFW_KEY_F2: s_screenshotPressed = true; break;
         case GLFW_KEY_F3: s_recordPressed = true; break;
         case GLFW_KEY_F4: s_overlayPressed = true; break;
+        case GLFW_KEY_F11: s_fullscreenPressed = true; break;
 
         case GLFW_KEY_B: s_bloomPressed = true; break;
         case GLFW_KEY_T: s_trailsPressed = true; break;

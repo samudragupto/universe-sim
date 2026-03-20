@@ -13,7 +13,12 @@ Application::Application()
       m_frameCount(0),
       m_fpsTimer(0.0f),
       m_fps(0.0f),
-      m_initialized(false) {
+      m_initialized(false),
+      m_fullscreen(false),
+      m_windowedX(100),
+      m_windowedY(100),
+      m_windowedW(1920),
+      m_windowedH(1080) {
     g_app = this;
 }
 
@@ -23,46 +28,84 @@ Application::~Application() {
 
 void Application::loadConfig() {
     m_cfg = {
-        150000,         // particleCount
-        0.5f,           // G
-        0.5f,           // softening
-        0.005f,         // timestep
-        1.10f,          // theta
-        0.1f,           // mergeDistance
-        false,          // bruteForce
-        false,          // evolution
-        false,          // adaptiveTimestep
-        false,          // adaptiveTheta
-        false,          // volumetricEnabled
-        64,             // densityFieldRes
-        2560,           // winW
-        1440,           // winH
+        50000,
+        0.5f,
+        0.5f,
+        0.005f,
+        1.25f,
+        0.1f,
+        false,
+        false,
+        true,
+        true,
+        false,
+        64,
+        1920,
+        1080,
         "galaxy_collision",
-        true,           // bloom
-        1.1f,           // bloomThresh
-        0.10f,          // bloomIntensity
-        1.1f,           // exposure
-        true,           // trails
-        16,             // trailLen
-        15000,          // maxTrailP
-        0.08f,          // vignette
-        0.0002f,        // chromatic
-        25.0f,          // camSpeed
-        0.1f,           // camSens
-        60.0f,          // camFOV
-        0.01f,          // nearP
-        50000.0f        // farP
+        true,
+        1.3f,
+        0.05f,
+        1.0f,
+        false,
+        16,
+        5000,
+        0.05f,
+        0.0001f,
+        25.0f,
+        0.1f,
+        60.0f,
+        0.01f,
+        50000.0f
     };
 
     std::ifstream file("config/simulation.json");
     if (file.is_open()) {
         std::string c((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
 
-        auto eF=[&](const std::string& k,float& v){size_t p=c.find("\""+k+"\"");if(p!=std::string::npos){p=c.find(":",p);if(p!=std::string::npos)v=std::stof(c.substr(p+1));}};
-        auto eI=[&](const std::string& k,int& v){size_t p=c.find("\""+k+"\"");if(p!=std::string::npos){p=c.find(":",p);if(p!=std::string::npos)v=std::stoi(c.substr(p+1));}};
-        auto eU=[&](const std::string& k,uint32_t& v){size_t p=c.find("\""+k+"\"");if(p!=std::string::npos){p=c.find(":",p);if(p!=std::string::npos)v=(uint32_t)std::stoul(c.substr(p+1));}};
-        auto eS=[&](const std::string& k,std::string& v){size_t p=c.find("\""+k+"\"");if(p!=std::string::npos){p=c.find("\"",p+k.length()+2);if(p!=std::string::npos){size_t s=p+1,e=c.find("\"",s);if(e!=std::string::npos)v=c.substr(s,e-s);}}};
-        auto eB=[&](const std::string& k,bool& v){size_t p=c.find("\""+k+"\"");if(p!=std::string::npos){p=c.find(":",p);if(p!=std::string::npos){std::string r=c.substr(p+1);size_t i=0;while(i<r.size()&&(r[i]==' '||r[i]=='\t'))i++;v=(r.substr(i,4)=="true");}}};
+        auto eF=[&](const std::string& k,float& v){
+            size_t p=c.find("\""+k+"\"");
+            if(p!=std::string::npos){
+                p=c.find(":",p);
+                if(p!=std::string::npos) v=std::stof(c.substr(p+1));
+            }
+        };
+        auto eI=[&](const std::string& k,int& v){
+            size_t p=c.find("\""+k+"\"");
+            if(p!=std::string::npos){
+                p=c.find(":",p);
+                if(p!=std::string::npos) v=std::stoi(c.substr(p+1));
+            }
+        };
+        auto eU=[&](const std::string& k,uint32_t& v){
+            size_t p=c.find("\""+k+"\"");
+            if(p!=std::string::npos){
+                p=c.find(":",p);
+                if(p!=std::string::npos) v=(uint32_t)std::stoul(c.substr(p+1));
+            }
+        };
+        auto eS=[&](const std::string& k,std::string& v){
+            size_t p=c.find("\""+k+"\"");
+            if(p!=std::string::npos){
+                p=c.find("\"",p+k.length()+2);
+                if(p!=std::string::npos){
+                    size_t s=p+1,e=c.find("\"",s);
+                    if(e!=std::string::npos) v=c.substr(s,e-s);
+                }
+            }
+        };
+        auto eB=[&](const std::string& k,bool& v){
+            size_t p=c.find("\""+k+"\"");
+            if(p!=std::string::npos){
+                p=c.find(":",p);
+                if(p!=std::string::npos){
+                    std::string r=c.substr(p+1);
+                    size_t i=0;
+                    while(i<r.size() && (r[i]==' ' || r[i]=='\t')) i++;
+                    v=(r.substr(i,4)=="true");
+                }
+            }
+        };
 
         eU("particle_count",m_cfg.particleCount);
         eF("gravitational_constant",m_cfg.G);
@@ -94,7 +137,8 @@ void Application::loadConfig() {
     }
 
     m_cfg.bruteForce = false;
-    if (m_cfg.particleCount < 100000) m_cfg.particleCount = 100000;
+    if (m_cfg.particleCount > 50000) m_cfg.particleCount = 50000;
+    if (m_cfg.theta < 1.0f) m_cfg.theta = 1.25f;
 }
 
 bool Application::initWindow() {
@@ -103,6 +147,8 @@ bool Application::initWindow() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_DECORATED, GLFW_TRUE);
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
     m_window = glfwCreateWindow(m_cfg.winW, m_cfg.winH, "Universe Simulation", nullptr, nullptr);
     if (!m_window) {
@@ -116,6 +162,9 @@ bool Application::initWindow() {
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) return false;
 
+    glfwGetWindowPos(m_window, &m_windowedX, &m_windowedY);
+    glfwGetWindowSize(m_window, &m_windowedW, &m_windowedH);
+
     printf("GL: %s | %s\n", glGetString(GL_VERSION), glGetString(GL_RENDERER));
     return true;
 }
@@ -128,8 +177,37 @@ bool Application::initCUDA() {
     cudaDeviceProp p;
     CUDA_CHECK(cudaGetDeviceProperties(&p, 0));
     printf("CUDA: %s (SM %d.%d, %zuMB)\n", p.name, p.major, p.minor, p.totalGlobalMem / (1024 * 1024));
+
     CUDA_CHECK(cudaSetDevice(0));
     return true;
+}
+
+void Application::toggleFullscreen() {
+    m_fullscreen = !m_fullscreen;
+
+    if (m_fullscreen) {
+        glfwGetWindowPos(m_window, &m_windowedX, &m_windowedY);
+        glfwGetWindowSize(m_window, &m_windowedW, &m_windowedH);
+
+        GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+        const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+
+        glfwSetWindowAttrib(m_window, GLFW_DECORATED, GLFW_FALSE);
+        glfwSetWindowPos(m_window, 0, 0);
+        glfwSetWindowSize(m_window, mode->width, mode->height);
+
+        glViewport(0, 0, mode->width, mode->height);
+        m_renderer.resize(mode->width, mode->height);
+        m_camera.setAspectRatio((float)mode->width / (float)mode->height);
+    } else {
+        glfwSetWindowAttrib(m_window, GLFW_DECORATED, GLFW_TRUE);
+        glfwSetWindowPos(m_window, m_windowedX, m_windowedY);
+        glfwSetWindowSize(m_window, m_windowedW, m_windowedH);
+
+        glViewport(0, 0, m_windowedW, m_windowedH);
+        m_renderer.resize(m_windowedW, m_windowedH);
+        m_camera.setAspectRatio((float)m_windowedW / (float)m_windowedH);
+    }
 }
 
 void Application::resetSimulation(Scenario sc) {
@@ -165,10 +243,10 @@ void Application::resetSimulation(Scenario sc) {
     sc2.mergeDistance = m_cfg.mergeDistance;
     sc2.bruteForce = false;
     sc2.evolution = m_cfg.evolution;
-    sc2.adaptiveTimestep = false;
-    sc2.adaptiveTheta = false;
-    sc2.skipTreeRebuild = false;      // rebuild every frame
-    sc2.treeRebuildInterval = 1;
+    sc2.adaptiveTimestep = m_cfg.adaptiveTimestep;
+    sc2.adaptiveTheta = m_cfg.adaptiveTheta;
+    sc2.skipTreeRebuild = true;
+    sc2.treeRebuildInterval = 2;
 
     m_sim.init(sc2, m_cfg.particleCount);
     m_sim.setParticles(&m_particles);
@@ -208,15 +286,15 @@ bool Application::init() {
     sc2.mergeDistance = m_cfg.mergeDistance;
     sc2.bruteForce = false;
     sc2.evolution = m_cfg.evolution;
-    sc2.adaptiveTimestep = false;
-    sc2.adaptiveTheta = false;
-    sc2.skipTreeRebuild = false;      // rebuild every frame
-    sc2.treeRebuildInterval = 1;
+    sc2.adaptiveTimestep = m_cfg.adaptiveTimestep;
+    sc2.adaptiveTheta = m_cfg.adaptiveTheta;
+    sc2.skipTreeRebuild = true;
+    sc2.treeRebuildInterval = 2;
 
     m_sim.init(sc2, m_cfg.particleCount);
     m_sim.setParticles(&m_particles);
 
-    m_camera.setPosition(glm::vec3(0.0f, 0.0f, 180.0f));
+    m_camera.setPosition(glm::vec3(0.0f, 0.0f, 120.0f));
     m_camera.setTarget(glm::vec3(0.0f, 0.0f, 0.0f));
     m_camera.setFOV(m_cfg.camFOV);
     m_camera.setAspectRatio((float)m_cfg.winW / (float)m_cfg.winH);
@@ -279,6 +357,10 @@ void Application::mainLoop() {
             m_renderer.setOverlayVisible(!m_renderer.isOverlayVisible());
         }
 
+        if (m_input.isFullscreenToggled()) {
+            toggleFullscreen();
+        }
+
         if (m_input.isBloomToggled()) {
             m_cfg.bloom = !m_cfg.bloom;
             m_renderer.config().bloomEnabled = m_cfg.bloom;
@@ -312,10 +394,8 @@ void Application::mainLoop() {
         m_camera.update(m_dt);
         m_sim.step();
 
-        // max GPU load: update every frame
         m_renderer.updateRenderBuffer(m_particles);
 
-        // max GPU load: trails every frame if enabled
         if (m_renderer.config().trailsEnabled) {
             m_renderer.updateTrails(m_particles);
         }
@@ -351,7 +431,7 @@ void Application::mainLoop() {
         st.bloomOn = m_cfg.bloom;
         st.trailsOn = m_cfg.trails;
         st.evolutionOn = m_cfg.evolution;
-        st.volumetricOn = false;
+        st.volumetricOn = m_cfg.volumetricEnabled;
         st.diag = m_sim.diagnostics();
 
         m_renderer.renderOverlay(st);
@@ -360,9 +440,12 @@ void Application::mainLoop() {
 }
 
 void Application::fbCallback(GLFWwindow* w, int width, int height) {
-    if (!width || !height || !g_app) return;
+    if (!g_app) return;
+    if (width <= 0 || height <= 0) return;
+
+    glViewport(0, 0, width, height);
     g_app->m_renderer.resize(width, height);
-    g_app->m_camera.setAspectRatio((float)width / height);
+    g_app->m_camera.setAspectRatio((float)width / (float)height);
 }
 
 void Application::shutdown() {
